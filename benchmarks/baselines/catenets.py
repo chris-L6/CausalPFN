@@ -63,6 +63,7 @@ class CATENetBaseline(BaselineModel):
             cate_pred_s = self.model.predict(X_te_s).ravel()
             cate_pred = self._unscale_cate(cate_pred_s, scaler_y)
         except Exception as e:
+            print(e)
             cate_pred = np.zeros(X_te.shape[0], dtype=np.float32)
         return cate_pred
 
