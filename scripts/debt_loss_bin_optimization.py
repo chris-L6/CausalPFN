@@ -32,6 +32,18 @@ bin_edges_contained[0] = -1
 df['treatment_bin'] = pd.cut(df[TREATMENT], bins=bin_edges_contained, labels=False)
 mean_outcome = [c[0] for c in df.groupby(['treatment_bin'])[[OUTCOME]].mean().to_numpy().tolist()]
 
+# Plotting
+fig = plt.figure()
+plt.plot(bin_edges, real_dose_response, label="Real dose-response curve")
+plt.plot(bin_edges[1:], mean_outcome, label="Observed mean Outcome")
+
+plt.plot(df[TREATMENT], df[OUTCOME + "_probs"], '.', alpha=0.2)
+plt.legend(loc="upper left")
+plt.xlabel("Percentage of debt loss (%)")
+plt.ylabel("Probability of debt repayment")
+plt.title("Simpson's Paradox")
+plt.savefig("../debt_dgp_fig_1.png")
+
 # Preprocessing
 X = df[generator.confounders].values.astype(np.float32)
 T = df[TREATMENT].values.astype(np.float32)
@@ -101,3 +113,33 @@ for N_DISC, ates in list_of_ates:
 # Create dataframe
 df = pd.DataFrame.from_dict(rmse_dict, orient="index", columns=["RMSE"])
 df.to_csv("../output/rmse_table.csv")
+fig = plt.figure()
+plt.bar(df.index, height=df["RMSE"])
+plt.xlabel("N_DISC")
+plt.ylabel("RMSE")
+plt.title("RMSE of different choices of N_DISC")
+plt.savefig("../output/rmse_bar_chart.png")
+
+# Plot predictions
+fig = plt.figure(figsize=(15, 10))
+i = 0 # counter for visual effects
+for N_DISC, ates in list_of_ates:
+    epos = [sum(ates[:i]) for i in range(N_DISC)]
+    if df.loc[N_DISC, "RMSE"] == df.min().values: # Emphasize best prediction
+        plt.plot(np.linspace(0.0, 1.0, N_DISC), epos, '-', linewidth=2,
+                 label=f"N_DISC={N_DISC} (Best)", c="blue", zorder=14)
+    else:
+        plt.plot(np.linspace(0.0, 1.0, N_DISC), epos, '--', linewidth=1,
+                 label=f"N_DISC={N_DISC}")
+    i += 1
+
+# True dose-response curve
+plt.plot(np.linspace(0.0, 1.0, len(y_true)), y_true,
+         label="True dose-response curve", linewidth=2, c='k', zorder=15)
+
+plt.title("$E[Y_t]$ (CausalPFN estimate using ATEs)") # Note E[Y_t] = E[Y | do(T = t)]
+plt.xlabel("Treatment dosage t")
+plt.ylabel("Expected outcome Y")
+
+plt.legend(fontsize=8)
+plt.savefig("../output/drf_plot.png", dpi=500)
