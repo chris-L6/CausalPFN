@@ -12,7 +12,7 @@ from debt_loss_dgp import DebtDGP, TREATMENT, OUTCOME
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## MAIN HYPERPARAMETER
-N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+N_DISC_VALUES = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
 
 # Load data
 generator = DebtDGP()
@@ -41,7 +41,7 @@ plt.legend(loc="upper left")
 plt.xlabel("Percentage of debt loss (%)")
 plt.ylabel("Probability of debt repayment")
 plt.title("Observed outcomes vs true dose-response curve")
-plt.savefig("../output/debt_dgp_fig_1.png")
+#plt.savefig("../output/debt_dgp_fig_1.png")
 
 # Preprocessing
 X = df[generator.confounders].values.astype(np.float32)
@@ -112,13 +112,13 @@ for N_DISC, ates in list_of_ates:
 
 # Create dataframe
 df = pd.DataFrame.from_dict(rmse_dict, orient="index", columns=["RMSE"])
-df.to_csv("../output/rmse_table.csv")
+df.to_csv("../output/debt_loss_rmse_table_large_N.csv")
 fig = plt.figure()
 plt.bar(df.index, height=df["RMSE"])
 plt.xlabel("N_DISC")
 plt.ylabel("RMSE")
 plt.title("RMSE of different choices of N_DISC")
-plt.savefig("../output/rmse_bar_chart.png")
+plt.savefig("../output/debt_loss_rmse_bar_chart_large_N.png")
 
 # Plot predictions
 fig = plt.figure(figsize=(15, 10))
@@ -142,4 +142,4 @@ plt.xlabel("Treatment dosage t")
 plt.ylabel("Expected outcome Y")
 
 plt.legend(fontsize=8)
-plt.savefig("../output/drf_plot_debt_loss_dgp.png", dpi=500)
+plt.savefig("../output/debt_loss_drf_plot_large_N.png", dpi=500)
