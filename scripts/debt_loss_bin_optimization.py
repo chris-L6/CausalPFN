@@ -13,7 +13,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## MAIN HYPERPARAMETER
 # N_DISC = 17, 19 were seen to be the worst, so I won't go higher than 16
-N_DISC_VALUES = [10]
+N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 # Load data
 generator = DebtDGP()
@@ -41,8 +41,8 @@ plt.plot(df[TREATMENT], df[OUTCOME + "_probs"], '.', alpha=0.2)
 plt.legend(loc="upper left")
 plt.xlabel("Percentage of debt loss (%)")
 plt.ylabel("Probability of debt repayment")
-plt.title("Simpson's Paradox")
-plt.savefig("../debt_dgp_fig_1.png")
+plt.title("Observed outcomes vs true dose-response curve")
+plt.savefig("../output/debt_dgp_fig_1.png")
 
 # Preprocessing
 X = df[generator.confounders].values.astype(np.float32)
