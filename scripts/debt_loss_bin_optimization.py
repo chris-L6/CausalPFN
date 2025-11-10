@@ -17,7 +17,7 @@ N_DISC_VALUES = [10]
 
 # Load data
 generator = DebtDGP()
-n = 15000
+n = 5000
 df = generator.generate_random_financial_data(n)
 generator.fit_scalers(df)
 df[TREATMENT] = generator.generate_treatment(df, noise=True, noise_scale=0.0, treament_noise_std=0.07)
