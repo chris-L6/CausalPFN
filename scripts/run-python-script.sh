@@ -1,5 +1,5 @@
 conda activate reproduce
 echo starting...
-python debt_loss_bin_optimization.py
+python bin-optimization_11-7-2025.py
 conda deactivate
 echo "finished"

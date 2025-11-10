@@ -52,7 +52,7 @@ Y = (3 * X[:, 0] + X[:, 1] - 0.5 * X[:, 2] + 3 * T + np.random.normal(0, 2, size
 def drf(t): return 3.5 + 3 * t # true dose-response function
 
 df = pd.concat([
-    pd.DataFrame(data=X, columns=["x"]), 
+    pd.DataFrame(data=X, columns=["x1", "x2", "x3"]), 
     pd.DataFrame(data=T, columns=["T"]), 
     pd.DataFrame(data=Y, columns=["Y"])
     ], axis=1)
@@ -69,7 +69,7 @@ for N_DISC in N_DISC_VALUES:
         t0, t1 = discrete_treatment_levels[i], discrete_treatment_levels[i + 1]
         ids = (np.abs(T_discrete - t0) < 1e-4) | (np.abs(T_discrete - t1) < 1e-4)
         T_temp = np.where(np.abs(T_discrete[ids] - t0) < 1e-4, 0, 1).astype(np.float32)
-        X_temp = X[ids].astype(np.float32).reshape(-1, 1)
+        X_temp = X[ids].astype(np.float32)
         Y_temp = Y[ids].astype(np.float32)
         causalpfn_ate = ATEEstimator(
             device=device,
