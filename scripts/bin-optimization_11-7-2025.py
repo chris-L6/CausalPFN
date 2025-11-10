@@ -73,7 +73,7 @@ for N_DISC in N_DISC_VALUES:
         Y_temp = Y[ids].astype(np.float32)
         causalpfn_ate = ATEEstimator(
             device=device,
-            verbose=False
+            verbose=True
         )
         causalpfn_ate.fit(X_temp, T_temp, Y_temp)
         ate = causalpfn_ate.estimate_ate()
@@ -98,7 +98,6 @@ for N_DISC, ates in list_of_ates:
 # Create dataframe, print optimizer, and save the data
 df = pd.DataFrame.from_dict(rmse_dict, orient="index", columns=["RMSE"])
 row = df[df["RMSE"] == df["RMSE"].min()]
-print(f"Optimal value of N_DISC: {row.index.values[0]} (RMSE: {row.values.item():.4f})")
 df.to_csv("../output/rmse-values-linear-backdoor.csv")
 
 fig = plt.figure()
@@ -130,4 +129,4 @@ plt.xlabel("Treatment dosage t")
 plt.ylabel("Expected outcome Y")
 
 plt.legend(fontsize=8)
-plt.savefig("../output/drf_plot.png", dpi=500)
+plt.savefig("../output/drf_plot_linear_backdoor.png", dpi=500)

@@ -142,4 +142,4 @@ plt.xlabel("Treatment dosage t")
 plt.ylabel("Expected outcome Y")
 
 plt.legend(fontsize=8)
-plt.savefig("../output/drf_plot.png", dpi=500)
+plt.savefig("../output/drf_plot_debt_loss_dgp.png", dpi=500)
