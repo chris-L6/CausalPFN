@@ -4,6 +4,7 @@ import sys
 sys.path.append("..")
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 
 from src.causalpfn import ATEEstimator
 from functools import reduce
@@ -12,7 +13,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 ## MAIN HYPERPARAMETER
-# N_DISC = 17, 19 were seen to be the worst, so I won't go higher than 16
 N_DISC_VALUES = [2, 4, 5]
 
 ## Main body
@@ -43,13 +43,13 @@ def calculate_rmse(y_pred, y_true):
 ## Synthetic data generation
 # Generate synthetic data, using the DGP from Vahid's paper - nonlinear backdoor
 np.random.seed(42)
-n, d = 2000, 1
-X = np.random.normal(2, 1, size=(n, d)).astype(np.float32)
-T = (0.1 * X[:, 0] ** 2 - X[:, 0] + np.random.normal(1, 2, size=n)).astype(np.float32)
+n, d = 2000, 3
+X = np.random.normal(1, 1, size=(n, d)).astype(np.float32)
+T = (X[:, 0] - X[:, 1] + 2 * X[:, 2] + 2 + np.random.normal(0, 3, size=n)).astype(np.float32)
 T = T - T.min() # Rescale
 T = T / T.max() # Rescale
-Y = (0.5 * T ** 2 - T * X[:, 0] + np.random.normal(0, 2, size=n)).astype(np.float32)
-def drf(t): return 0.5 * t ** 2 - 2 * t # true dose-response funcion
+Y = (3 * X[:, 0] + X[:, 1] - 0.5 * X[:, 2] + 3 * T + np.random.normal(0, 2, size=n)).astype(np.float32)
+def drf(t): return 3.5 + 3 * t # true dose-response function
 
 df = pd.concat([
     pd.DataFrame(data=X, columns=["x"]), 
@@ -90,7 +90,7 @@ t_mesh = reduce(np.union1d, tuple(t_mesh))
 rmse_dict = dict()
 y_true = drf(t_mesh)
 for N_DISC, ates in list_of_ates:
-    epos = [sum(ates[:i]) for i in range(N_DISC)]
+    epos = [3.5 + sum(ates[:i]) for i in range(N_DISC)]
     y_pred = np.interp(t_mesh, np.linspace(0, 1, N_DISC), epos)
     error = calculate_rmse(y_pred, y_true)
     rmse_dict[N_DISC] = np.round(error, 4)
@@ -99,4 +99,35 @@ for N_DISC, ates in list_of_ates:
 df = pd.DataFrame.from_dict(rmse_dict, orient="index", columns=["RMSE"])
 row = df[df["RMSE"] == df["RMSE"].min()]
 print(f"Optimal value of N_DISC: {row.index.values[0]} (RMSE: {row.values.item():.4f})")
-df.to_csv("../output/rmse-values.csv")
+df.to_csv("../output/rmse-values-linear-backdoor.csv")
+
+fig = plt.figure()
+plt.bar(df.index, height=df["RMSE"])
+plt.xlabel("N_DISC")
+plt.ylabel("RMSE")
+plt.title("RMSE of different choices of N_DISC")
+plt.savefig("../output/rmse_bar_chart-linear-backdoor.png")
+
+# Plot predictions
+fig = plt.figure(figsize=(15, 10))
+i = 0 # counter for visual effects
+for N_DISC, ates in list_of_ates:
+    epos = [3.5 + sum(ates[:i]) for i in range(N_DISC)]
+    if df.loc[N_DISC, "RMSE"] == df.min().values: # Emphasize best prediction
+        plt.plot(np.linspace(0.0, 1.0, N_DISC), epos, '-', linewidth=2,
+                 label=f"N_DISC={N_DISC} (Best)", c="blue", zorder=14)
+    else:
+        plt.plot(np.linspace(0.0, 1.0, N_DISC), epos, '--', linewidth=1,
+                 label=f"N_DISC={N_DISC}")
+    i += 1
+
+# True dose-response curve
+plt.plot(np.linspace(0.0, 1.0, len(y_true)), y_true,
+         label="True dose-response curve", linewidth=2, c='k', zorder=15)
+
+plt.title("$E[Y_t]$ (CausalPFN estimate using ATEs)") # Note E[Y_t] = E[Y | do(T = t)]
+plt.xlabel("Treatment dosage t")
+plt.ylabel("Expected outcome Y")
+
+plt.legend(fontsize=8)
+plt.savefig("../output/drf_plot.png", dpi=500)
