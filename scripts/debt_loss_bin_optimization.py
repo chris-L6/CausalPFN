@@ -12,7 +12,6 @@ from debt_loss_dgp import DebtDGP, TREATMENT, OUTCOME
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## MAIN HYPERPARAMETER
-# N_DISC = 17, 19 were seen to be the worst, so I won't go higher than 16
 N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 # Load data
@@ -76,6 +75,7 @@ def calculate_rmse(y_pred, y_true):
 list_of_ates = [] # [(N_DISC, ates)]
 
 for N_DISC in N_DISC_VALUES:
+    print(f"N_DISC: {N_DISC}")
     discrete_treatment_levels = np.linspace(0, 1, N_DISC)
     T_discrete = discretize_treatment(T, N_DISC)
     ates = []
