@@ -12,7 +12,7 @@ from functools import reduce
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## MAIN HYPERPARAMETER
-N_DISC_VALUES = [2]
+N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 ## Main body
 # Discretization function
@@ -44,7 +44,7 @@ def calculate_rmse(y_pred, y_true):
 # DGP constants
 np.random.seed(123)
 def exp_te(x): return np.exp(2 * x[0])
-n = 1000
+n = 2000
 n_w = 30
 support_size = 5
 n_x = 1
