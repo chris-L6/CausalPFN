@@ -13,7 +13,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 ## MAIN HYPERPARAMETER
-N_DISC_VALUES = [2, 4, 5]
+N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 ## Main body
 # Discretization function
@@ -43,7 +43,7 @@ def calculate_rmse(y_pred, y_true):
 ## Synthetic data generation
 # Generate synthetic data, using the DGP from Vahid's paper - nonlinear backdoor
 np.random.seed(42)
-n, d = 2000, 3
+n, d = 15000, 3
 X = np.random.normal(1, 1, size=(n, d)).astype(np.float32)
 T = (X[:, 0] - X[:, 1] + 2 * X[:, 2] + 2 + np.random.normal(0, 3, size=n)).astype(np.float32)
 T = T - T.min() # Rescale
