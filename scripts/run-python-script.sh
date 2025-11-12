@@ -1,5 +1,5 @@
 conda activate reproduce
 echo starting...
-python econML1_bin_optimization.py
+python ADMIT_bin_optimization_11-12.py
 conda deactivate
 echo "finished"

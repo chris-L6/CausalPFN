@@ -12,7 +12,7 @@ from functools import reduce
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## MAIN HYPERPARAMETER
-N_DISC_VALUES = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+N_DISC_VALUES = [30, 40, 50, 60, 70, 80, 90, 100]
 
 ## Main body
 # Discretization function
