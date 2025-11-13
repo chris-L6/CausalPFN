@@ -4,7 +4,7 @@
 ## Module imports
 import pandas as pd
 import sys
-sys.path.append("../..")
+sys.path.append("..")
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -109,8 +109,26 @@ for N_DISC in N_DISC_VALUES:
     list_of_epos.append((N_DISC, epos))
     list_of_ates.append((N_DISC, ates))
 
-# import epos and ates to json
-with open("../../output/11-13-2025/epos.json", "w", encoding='utf-8') as f:
-    json.dump(list_of_epos, f, ensure_ascii=False, indent=4)
-with open("../../output/11-13-2025/ates.json", "w", encoding='utf-8') as f:
-    json.dump(list_of_ates, f, ensure_ascii=False, indent=4)
+# Format epos and ates in a pandas DataFrame
+multi_indices = pd.MultiIndex.from_tuples(
+    [(N, i) for N in N_DISC_VALUES for i in range(N - 1)],
+    names=["N_DISC", "subinterval"]
+)
+cols = ["EPOs", "ATEs"]
+data = [] # to input into DataFrame constructor
+for i, N in enumerate(N_DISC_VALUES):
+    print(f"i: {i}, N: {N}")
+    epos = list_of_epos[i][1]
+    ates = list_of_ates[i][1]
+    print(f"epos: {epos}\nates: {ates}")
+    n_subintervals = N - 1
+    for j in range(n_subintervals):
+        epo_pair = epos[j]
+        ate = ates[j]
+        data.append([epo_pair, ate])
+df = pd.DataFrame(
+    data=data,
+    index=multi_indices,
+    columns=cols
+)
+df.to_csv("../../output/11-13-2025/cepo_vs_ate.csv")
