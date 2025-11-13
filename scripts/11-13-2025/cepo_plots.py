@@ -117,10 +117,8 @@ multi_indices = pd.MultiIndex.from_tuples(
 cols = ["EPOs", "ATEs"]
 data = [] # to input into DataFrame constructor
 for i, N in enumerate(N_DISC_VALUES):
-    print(f"i: {i}, N: {N}")
     epos = list_of_epos[i][1]
     ates = list_of_ates[i][1]
-    print(f"epos: {epos}\nates: {ates}")
     n_subintervals = N - 1
     for j in range(n_subintervals):
         epo_pair = epos[j]
