@@ -13,7 +13,8 @@ from debt_loss_dgp import DebtDGP, TREATMENT, OUTCOME
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## Main hyperparameter
-N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+#N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+N_DISC_VALUES = [3, 4]
 
 ## Discretization function
 def discretize_treatment(T: np.ndarray, N: int) -> np.ndarray:
@@ -50,12 +51,9 @@ mean_outcome = [c[0] for c in df.groupby(['treatment_bin'])[[OUTCOME]].mean().to
 y_true_f = interp1d(bin_edges, real_dose_response)
 def drf(t):
     return y_true_f(t)
-
-df = pd.concat([
-    pd.DataFrame(data=X, columns=["x1", "x2", "x3"]), 
-    pd.DataFrame(data=T, columns=["T"]), 
-    pd.DataFrame(data=Y, columns=["Y"])
-    ], axis=1)
+X = df[generator.confounders].values.astype(np.float32)
+T = df[TREATMENT].values.astype(np.float32)
+Y = df[OUTCOME + "_probs"].values.astype(np.float32)
 
 ## Main inference loop
 list_of_epos = [] # [(N_DISC, epos)], epos = [(mu_t0, mu_t1), (mu_t1, mu_t2), ... ]
