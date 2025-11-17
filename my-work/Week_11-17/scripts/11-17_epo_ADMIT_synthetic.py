@@ -57,6 +57,7 @@ for t in treatment_doses:
     mu_2_intervention = np.cos(2 * np.pi * (T_intervention - 0.5)) * (T_intervention ** 2 + (4 * np.maximum(x1, x6) ** 3) * np.sin(x4) / (1 + 2 * x3 ** 2))
     effects.append(mu_2_intervention.mean())
 effects = np.array(effects)
+drf = interp1d(treatment_doses, effects)
 
 ## Main inference loop
 list_of_epos = [] # [(N_DISC, epos)], epos = [(mu_t0, mu_t1), (mu_t1, mu_t2), ... ]
