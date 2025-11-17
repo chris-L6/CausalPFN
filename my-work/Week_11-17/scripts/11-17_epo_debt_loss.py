@@ -70,14 +70,14 @@ for N_DISC in N_DISC_VALUES:
         T_temp = np.where(np.abs(T_discrete[ids] - t0) < 1e-4, 0, 1).astype(np.float32)
         X_temp = X[ids].astype(np.float32)
         Y_temp = Y[ids].astype(np.float32)
-        # to predict ate
-        causalpfn_ate = ATEEstimator(
-            device=device,
-            verbose=True
-        )
-        causalpfn_ate.fit(X_temp, T_temp, Y_temp)
-        ate = causalpfn_ate.estimate_ate()
-        ates.append(ate)
+        # # to predict ate
+        # causalpfn_ate = ATEEstimator(
+        #     device=device,
+        #     verbose=True
+        # )
+        # causalpfn_ate.fit(X_temp, T_temp, Y_temp)
+        # ate = causalpfn_ate.estimate_ate()
+        # ates.append(ate)
         # to predict cepo
         X_context = X_temp 
         t_context = T_temp
