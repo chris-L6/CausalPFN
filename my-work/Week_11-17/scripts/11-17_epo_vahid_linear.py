@@ -30,18 +30,18 @@ def discretize_treatment(T: np.ndarray, N: int) -> np.ndarray:
     return T_discrete
 
 ## Synthetic data generation
-data_name = "vahid-nonlinear"
+data_name = "vahid-linear"
 np.random.seed(42)
-n, d = 2000, 1
-X = np.random.normal(2, 1, size=(n, d)).astype(np.float32)
-T = (0.1 * X[:, 0] ** 2 - X[:, 0] + np.random.normal(1, 2, size=n)).astype(np.float32)
+n, d = 2000, 3
+X = np.random.normal(1, 1, size=(n, d)).astype(np.float32)
+T = (X[:, 0] - X[:, 1] + 2 * X[:, 2] + 2 + np.random.normal(0, 3, size=n)).astype(np.float32)
 T = T - T.min() # Rescale
 T = T / T.max() # Rescale
-Y = (0.5 * T ** 2 - T * X[:, 0] + np.random.normal(0, 2, size=n)).astype(np.float32)
-def drf(t): return 0.5 * t ** 2 - 2 * t # true dose-response funcion
+Y = (3 * X[:, 0] + X[:, 1] - 0.5 * X[:, 2] + 3 * T + np.random.normal(0, 2, size=n)).astype(np.float32)
+def drf(t): return 3.5 + 3 * t # true dose-response function
 
 df = pd.concat([
-    pd.DataFrame(data=X, columns=["x"]), 
+    pd.DataFrame(data=X, columns=["x1", "x2", "x3"]), 
     pd.DataFrame(data=T, columns=["T"]), 
     pd.DataFrame(data=Y, columns=["Y"])
     ], axis=1)
