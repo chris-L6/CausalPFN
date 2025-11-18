@@ -10,7 +10,7 @@ from src.causalpfn.causal_estimator import CausalEstimator
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ## Main hyperparameter
-N_DISC_VALUES = [3, 4]
+N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
 
 # Discretization function
 def discretize_treatment(T: np.ndarray, N: int) -> np.ndarray:
