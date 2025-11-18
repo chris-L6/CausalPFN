@@ -13,7 +13,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
 
 # Discretization function
-def discretize_treatment(T: np.ndarray, N: int) -> np.ndarray:
+def discretize_treatment(T: np.ndarray, N: int) -> tuple[np.ndarray, np.ndarray]:
     """Returns quantile method discretized version of T. Assumes range of T is [0, 1].
 
     Args:
@@ -21,9 +21,11 @@ def discretize_treatment(T: np.ndarray, N: int) -> np.ndarray:
         N (int): The number of bins (equiv to the number of discrete treatment values)
 
     Returns:
-        np.ndarray: The discretized treatment data
+        np.ndarray: The discretized treatment data (expected outcomes)
+        np.ndarray: The discretized treatment values
     """
     T_discrete = np.zeros(T.shape)
+    T_vals = np.zeros((N,))
     bin_edges = np.percentile(T, np.linspace(0, 100, N + 1))
     for i in range(len(bin_edges) - 1):
         left_edge = bin_edges[i]
@@ -31,8 +33,9 @@ def discretize_treatment(T: np.ndarray, N: int) -> np.ndarray:
         ids = (T >= left_edge) & (T <= right_edge)
         avg = np.mean(T[ids])
         T_discrete[ids] = avg
+        T_vals[i] = avg
 
-    return T_discrete
+    return T_discrete, T_vals
 
 ## Synthetic data generation
 data_name = "vahid-nonlinear"
@@ -53,11 +56,12 @@ df = pd.concat([
     ], axis=1)
 
 ## Main inference loop
+list_of_t_vals = [] #[(N_DISC, discrete_treatment_levels)]
 list_of_epos = [] # [(N_DISC, epos)], epos = [(mu_t0, mu_t1), (mu_t1, mu_t2), ... ]
 for N_DISC in N_DISC_VALUES:
     print(f"N_DISC: {N_DISC}")
-    T_discrete = discretize_treatment(T, N_DISC)
-    discrete_treatment_levels = np.unique(T_discrete)
+    T_discrete, T_vals = discretize_treatment(T, N_DISC)
+    discrete_treatment_levels = T_vals
     epos = []
     for i, t in enumerate(discrete_treatment_levels[:-1]):
         # focus on two neighboring treatment levels and convert to binary T = 0, 1 values 
@@ -89,6 +93,7 @@ for N_DISC in N_DISC_VALUES:
         mu_0 = (mu_vals[: X_query.shape[0]]).mean()
         mu_1 = (mu_vals[X_query.shape[0] :]).mean()
         epos.append((mu_0, mu_1))
+    list_of_t_vals.append((N_DISC, discrete_treatment_levels))
     list_of_epos.append((N_DISC, epos))
 
 ## Create DataFrame and format it
@@ -100,10 +105,11 @@ multi_indices = pd.MultiIndex.from_tuples(
     [(N, i) for N in N_DISC_VALUES for i in range(N)],
     names=["N_DISC", "treatment_value_idx"]
 )
-cols = ["EPOs_1", "EPOs_2", "true_effect"]
+cols = ["T", "EPOs_1", "EPOs_2", "true_effect"]
 data = []
 for i, N in enumerate(N_DISC_VALUES):
     epos = list_of_epos[i][1]
+    t_vals = list_of_t_vals[i][1]
     for j in range(N): 
         # iterate over treatment_value_idx values; first and last values 
         # have only one prediction
@@ -116,9 +122,9 @@ for i, N in enumerate(N_DISC_VALUES):
         else:
             epo_1 = epos[j - 1][1]
             epo_2 = epos[j][0]
-        treatment_val = j / (N - 1)
-        true_effect = drf(treatment_val)
-        data.append([epo_1, epo_2, true_effect])
+        t_val = t_vals[j]
+        true_effect = drf(t_val)
+        data.append([t_val, epo_1, epo_2, true_effect])
 epo_df= pd.DataFrame(
     data=data,
     index=multi_indices,
