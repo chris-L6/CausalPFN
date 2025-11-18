@@ -6,7 +6,6 @@ import torch
 import datetime
 
 from src.causalpfn.causal_estimator import CausalEstimator
-from src.causalpfn import ATEEstimator
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
