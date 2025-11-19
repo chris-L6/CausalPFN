@@ -1,9 +1,14 @@
 import numpy as np
 
+# Implemented discretization schemes
+SCHEMES = ["uniform", "quantile"]
+
 class DataDiscretizer:
     """Class for discretizing treatment variable based on passed scheme.
     """
     def __init__(self, scheme: str):
+        if scheme not in SCHEMES:
+            raise ValueError(f"scheme must be one of {SCHEMES}")
         self.scheme = scheme
     
     def discretize_treatment(self, T: np.ndarray, N: int) -> tuple[np.ndarray, np.ndarray]:
@@ -39,4 +44,4 @@ class DataDiscretizer:
             return T_discrete, T_vals
         
         else: 
-            raise ValueError("self.scheme must be one of ['uniform', 'scheme']")
+            raise ValueError(f"self.scheme must be one of {SCHEMES}")
