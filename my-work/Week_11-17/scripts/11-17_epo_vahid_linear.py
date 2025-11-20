@@ -47,7 +47,6 @@ df = pd.concat([
 
 ## Main inference loop
 list_of_epos = [] # [(N_DISC, epos)], epos = [(mu_t0, mu_t1), (mu_t1, mu_t2), ... ]
-list_of_ates = [] # [(N_DISC, ates)], ates = [ATE(t0, t1), ATE(t1, t2), ...]
 for N_DISC in N_DISC_VALUES:
     print(f"N_DISC: {N_DISC}")
     discrete_treatment_levels = np.linspace(0, 1, N_DISC)
@@ -60,14 +59,6 @@ for N_DISC in N_DISC_VALUES:
         T_temp = np.where(np.abs(T_discrete[ids] - t0) < 1e-4, 0, 1).astype(np.float32)
         X_temp = X[ids].astype(np.float32)
         Y_temp = Y[ids].astype(np.float32)
-        # to predict ate
-        causalpfn_ate = ATEEstimator(
-            device=device,
-            verbose=True
-        )
-        causalpfn_ate.fit(X_temp, T_temp, Y_temp)
-        ate = causalpfn_ate.estimate_ate()
-        ates.append(ate)
         # to predict cepo
         X_context = X_temp 
         t_context = T_temp
@@ -92,7 +83,6 @@ for N_DISC in N_DISC_VALUES:
         mu_1 = (mu_vals[X_query.shape[0] :]).mean()
         epos.append((mu_0, mu_1))
     list_of_epos.append((N_DISC, epos))
-    list_of_ates.append((N_DISC, ates))
 
 ## Create DataFrame and format it
 # treatment_value_idx refers to which bin of the N_DISC the data is in. 
@@ -138,4 +128,4 @@ date_string = f"{month}-{date}_{hour}h{minute}m"
 # Save the DataFrame
 file_name = "EPO_df_" + data_name + "_" + date_string
 file_location = "../output"
-epo_df.to_csv(f"{file_location}/{file_name}.csv")
+# epo_df.to_csv(f"{file_location}/{file_name}.csv")

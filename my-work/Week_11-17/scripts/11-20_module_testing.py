@@ -26,12 +26,23 @@ Y = (3 * X[:, 0] + X[:, 1] - 0.5 * X[:, 2] + 3 * T + np.random.normal(0, 2, size
 def drf(t): return 3.5 + 3 * t # true dose-response function
 
 # Inference
+epos_collection = dict() # collect all results across all N_DISC in N_DISC_VALUES
 for N_DISC in N_DISC_VALUES:
     discretizer = DataDiscretizer(scheme=scheme)
+    T_discrete, T_vals = discretizer.discretize_treatment(T, N_DISC)
     model = DiscreteCausalPFN(
         comparison_method=comparison_method,
         N_DISC=N_DISC,
         device=device,
         verbose=True
     )
-    
+    epos_dict = model.predict_epos(
+        X,
+        T_discrete, 
+        Y, 
+        discrete_treatment_vals=T_vals,
+        take_mean=True
+    )
+    epos_collection[N_DISC] = epos_dict
+
+# Export data
