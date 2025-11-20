@@ -42,6 +42,7 @@ class DiscreteCausalPFN:
             T: np.ndarray,
             Y: np.ndarray,
             discrete_treatment_vals: np.ndarray,
+            take_mean: bool = False,
             estimate_CI: bool = False
     ):
         """Predicts EPOs given data.
@@ -100,7 +101,13 @@ class DiscreteCausalPFN:
             else:
                 epos_dict[t_1].append(mu_1)
 
-        return epos_dict
+        if not take_mean:
+            return epos_dict
+        else:
+            epos_means = dict()
+            for t_val in epos_dict:
+                epos_means[t_val] = np.mean(epos_dict[t_val])
+            return epos_means
         
     def _predict_mu_0_and_mu_1(
             self, 
