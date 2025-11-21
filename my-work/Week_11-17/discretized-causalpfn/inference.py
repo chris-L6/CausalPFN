@@ -67,7 +67,7 @@ class DiscreteCausalPFN:
         # Consistency checks
         if self.N_DISC != len(discrete_treatment_vals):
             raise ValueError(f"self.N_DISC = {self.N_DISC} but discrete_treatment_vals = {discrete_treatment_vals}; should be equal.")
-        if not np.allclose(np.sort(np.unique(T)), discrete_treatment_vals, rtol=1e-10, atol=1e-5):
+        if len(np.unique(T)) != len(discrete_treatment_vals) or not np.allclose(np.sort(np.unique(T)), discrete_treatment_vals, rtol=1e-10, atol=1e-5):
             raise ValueError("Treatment T does not match discrete_treatment_vals.")
         if take_mean not in [True, False, "both"]:
             raise ValueError(f"take_mean must be bool or 'both', got {take_mean}.")
