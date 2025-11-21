@@ -42,7 +42,7 @@ class DiscreteCausalPFN:
             T: np.ndarray,
             Y: np.ndarray,
             discrete_treatment_vals: np.ndarray,
-            take_mean: bool = False,
+            take_mean: bool | str = False,
             estimate_CI: bool = False
     ):
         """Predicts EPOs given data.
@@ -69,6 +69,8 @@ class DiscreteCausalPFN:
             raise ValueError(f"self.N_DISC = {self.N_DISC} but discrete_treatment_vals = {discrete_treatment_vals}; should be equal.")
         if not np.allclose(np.sort(np.unique(T)), discrete_treatment_vals, rtol=1e-10, atol=1e-5):
             raise ValueError("Treatment T does not match discrete_treatment_vals.")
+        if take_mean not in [True, False, "both"]:
+            raise ValueError(f"take_mean must be bool or 'both', got {take_mean}.")
         
         ## Main inference loop calling CausalPFN's CausalEstimator
         # Get the bin pairs to pass to CausalPFN via _predict_mu_0_and_mu_1
@@ -101,13 +103,21 @@ class DiscreteCausalPFN:
             else:
                 epos_dict[t_1].append(mu_1)
 
-        if not take_mean:
-            return epos_dict
-        else:
+        if take_mean == "both":
             epos_means = dict()
             for t_val in epos_dict:
                 epos_means[t_val] = np.mean(epos_dict[t_val])
-            return epos_means
+            return epos_dict, epos_means
+        elif type(take_mean) is not bool:
+            raise ValueError(f"Invalid entry for take_mean: {take_mean}")
+        else:
+            if not take_mean:
+                return epos_dict
+            else:
+                epos_means = dict()
+                for t_val in epos_dict:
+                    epos_means[t_val] = np.mean(epos_dict[t_val])
+                return epos_means
         
     def _predict_mu_0_and_mu_1(
             self, 
