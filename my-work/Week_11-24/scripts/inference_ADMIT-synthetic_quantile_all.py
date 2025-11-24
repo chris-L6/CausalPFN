@@ -27,27 +27,33 @@ comparison_method = "all"
 N_DISC_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
 ## DGP 
-data_name = "debt-loss"
-generator = DebtDGP()
-n = 15000
-df = generator.generate_random_financial_data(n)
-generator.fit_scalers(df)
-df[TREATMENT] = generator.generate_treatment(df, noise=True, noise_scale=0.0, treament_noise_std=0.07)
-df[OUTCOME + "_probs"], df[OUTCOME] = generator.calculate_outcome_probability(df, df[TREATMENT])
-step = 1e-2
-bin_edges = np.arange(0, 1+step, step)
-real_dose_response = generator.compute_causal_effects(df, bin_edges, "ate")
-bin_edges_contained = bin_edges.copy()
-bin_edges_contained[0] = -1
-df['treatment_bin'] = pd.cut(df[TREATMENT], bins=bin_edges_contained, labels=False)
-mean_outcome = [c[0] for c in df.groupby(['treatment_bin'])[[OUTCOME]].mean().to_numpy().tolist()]
-# True dose-response function
-y_true_f = interp1d(bin_edges, real_dose_response)
-def drf(t):
-    return y_true_f(t)
-X = df[generator.confounders].values.astype(np.float32)
-T = df[TREATMENT].values.astype(np.float32)
-Y = df[OUTCOME + "_probs"].values.astype(np.float32)
+data_name = "ADMIT-synthetic"
+# DGP from https://github.com/CausalTeam/ADMIT/blob/main
+def sigmoid(t): return 1. / (1. + np.exp(-1. * t))
+n, d = 2000, 6
+X = np.random.uniform(-1, 1, (n, d))
+x1 = X[:, 0]
+x2 = X[:, 1]
+x3 = X[:, 2]
+x4 = X[:, 3]
+x5 = X[:, 4]
+x6 = X[:, 5]
+# Generate treatment 
+mu_1 =  (10. * np.sin(np.maximum(x1, np.maximum(x2, x3))) + np.maximum(x3, np.maximum(x4, x5))**3)/(1. + (x1 + x5)**2) + np.sin(0.5 * x3) * (1. + np.exp(x4 - 0.5 * x3)) + x3**2 + 2. * np.sin(x4) + 2.*x5 - 6.5
+T = np.random.normal(mu_1, 0.5)
+T = sigmoid(T)
+# Generate outcomes
+mu_2 = np.cos(2 * np.pi * (T - 0.5)) * (T ** 2 + (4 * np.maximum(x1, x6) ** 3) * np.sin(x4) / (1 + 2 * x3 ** 2))
+Y = np.random.normal(mu_2, 0.5)
+# Generated expected potential outcomes empirically
+treatment_doses = np.linspace(0, 1, 100)
+effects = []
+for t in treatment_doses:
+    T_intervention = t * np.ones(T.shape)
+    mu_2_intervention = np.cos(2 * np.pi * (T_intervention - 0.5)) * (T_intervention ** 2 + (4 * np.maximum(x1, x6) ** 3) * np.sin(x4) / (1 + 2 * x3 ** 2))
+    effects.append(mu_2_intervention.mean())
+effects = np.array(effects)
+drf = interp1d(treatment_doses, effects)
 
 ## INFERENCE
 epos_collection = dict() # collect all results across all N_DISC in N_DISC_VALUES
