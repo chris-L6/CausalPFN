@@ -10,6 +10,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 from discretize import DataDiscretizer
 from inference import DiscreteCausalPFN
 from scipy.interpolate import interp1d
+from debt_loss_dgp import DebtDGP, TREATMENT, OUTCOME
 
 ## HELPER FUNCTIONS AND PARAMETERS
 # RMSE function
