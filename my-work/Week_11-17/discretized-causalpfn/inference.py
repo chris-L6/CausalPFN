@@ -1,10 +1,12 @@
 # Eventually want to output all predicted EPOs (maybe CEPOs) and CIs too
 
 import numpy as np
+import torch
 import sys
 sys.path.append("../../..")
 
 from src.causalpfn.causal_estimator import CausalEstimator
+from src.causalpfn.utils import sample_confidence_interval
 from discretize import SCHEMES, DataDiscretizer
 
 COMPARISON_METHODS = ["sequential", "all"]
@@ -123,7 +125,8 @@ class DiscreteCausalPFN:
             self, 
             X: np.ndarray, 
             T: np.ndarray, 
-            Y: np.ndarray 
+            Y: np.ndarray, 
+            alpha: float | None = None
     ):
         """Given *binary* treatment data T (pre-processed to be 0s and 1s), predicts the EPOs
         mu_0 and mu_1.
@@ -137,7 +140,7 @@ class DiscreteCausalPFN:
         T_vals = np.sort(np.unique(T))
         if not np.array_equal(T_vals, np.array([0, 1])):
             raise ValueError(f"T must be binarized with values 0 and 1, but is {T_vals}") 
-
+        
         X_context, t_context, y_context = X, T, Y
         X_query = X
         t_all_ones = np.ones(X_query.shape[0], dtype=X_query.dtype)
@@ -147,14 +150,44 @@ class DiscreteCausalPFN:
             verbose=self.verbose
         )
         model.fit(X, T, Y)
-        mu_vals = model._predict_cepo(
-            X_context=X_context, 
-            t_context=t_context, 
-            y_context=y_context,
-            X_query=np.concatenate([X_query, X_query], axis=0),
-            t_query=np.concatenate([t_all_zeros, t_all_ones], axis=0),
-            temperature=self.temperature
-        )
-        mu_0 = (mu_vals[: X_query.shape[0]]).mean()
-        mu_1 = (mu_vals[X_query.shape[0] :]).mean()
-        return mu_0, mu_1
+        if not alpha: # don't estimate CI 
+            mu_vals = model._predict_cepo(
+                X_context=X_context, 
+                t_context=t_context, 
+                y_context=y_context,
+                X_query=np.concatenate([X_query, X_query], axis=0),
+                t_query=np.concatenate([t_all_zeros, t_all_ones], axis=0),
+                temperature=self.temperature
+            )
+            mu_0 = (mu_vals[: X_query.shape[0]]).mean()
+            mu_1 = (mu_vals[X_query.shape[0] :]).mean()
+            return mu_0, mu_1
+        else:
+            mu_vals, samples = model._predict_cepo(
+                X_context=X_context, 
+                t_context=t_context, 
+                y_context=y_context,
+                X_query=np.concatenate([X_query, X_query], axis=0),
+                t_query=np.concatenate([t_all_zeros, t_all_ones], axis=0),
+                n_samples=10_000,
+                temperature=self.temperature
+            )
+            mu_0 = (mu_vals[: X_query.shape[0]]).mean()
+            mu_1 = (mu_vals[X_query.shape[0] :]).mean()
+            # Calculate confidence intervals for mu_0 and mu_1
+            samples_0 = samples[: X_query.shape[0]].mean(axis=0)
+            samples_1 = samples[X_query.shape[0] :].mean(axis=0)
+            mu_0_lower_bound, mu_0_upper_bound = sample_confidence_interval(
+                torch.from_numpy(samples_0).float(), alphas=torch.tensor([alpha]).float()
+            )
+            mu_1_lower_bound, mu_1_upper_bound = sample_confidence_interval(
+                torch.from_numpy(samples_1).float(), alphas=torch.tensor([alpha]).float()
+            )
+            return {
+                "mu_0": mu_0, 
+                "mu_1": mu_1, 
+                "mu_0_lower_bound": mu_0_lower_bound,
+                "mu_0_upper_bound": mu_0_upper_bound, 
+                "mu_1_lower_bound": mu_1_lower_bound, 
+                "mu_1_upper_bound": mu_1_upper_bound
+            }
