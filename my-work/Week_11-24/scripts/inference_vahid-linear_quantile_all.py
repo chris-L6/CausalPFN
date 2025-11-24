@@ -24,7 +24,7 @@ fine_t_mesh = np.linspace(0, 1, 100)
 # Parameters
 scheme = "quantile"
 comparison_method = "all"
-N_DISC_VALUES = [24, 25, 26, 27, 28, 29, 30]
+N_DISC_VALUES = [2, 3, 4] # [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
 
 ## DGP 
@@ -84,5 +84,5 @@ minute = datetime.datetime.now().minute
 date_string = f"{month}-{date}_{hour}h{minute}m"
 # Save the DataFrame
 file_name = f"EPO_df_with_CI_{data_name}_{scheme}_{comparison_method}_{date_string}"
-file_location = "../output/11-24"
+file_location = "../output"
 epo_df.to_csv(f"{file_location}/{file_name}.csv")
